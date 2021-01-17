@@ -1,0 +1,274 @@
+/**
+Author: Shivaji Basu
+Dated: 10.11.2011
+*/
+#include <iostream>
+#include <stdio.h>
+using namespace std;
+
+
+class BinarySearchTree{    
+protected:
+    class Node{
+    public:
+  int      value;
+  Node*    left;
+  Node*    right;
+
+    public:
+  Node (int n,  Node* l,  Node* r) : value(n), left(l), right(r) {}
+
+  int GetValue() { return value;}
+
+  Node* GetRightNode() { return right; }
+
+  Node* GetLeftNode() { return left; }
+
+ }* m_pHeader;
+
+ 
+public:
+
+ BinarySearchTree () : m_pHeader(NULL){}
+ ~BinarySearchTree()
+ {
+	if (m_pHeader)
+	{
+		DeleteNode( m_pHeader );
+		delete m_pHeader;
+		m_pHeader = NULL;
+	}
+ }
+ 
+ void printNodes()
+{
+    printf("R =");
+    printNode( m_pHeader);
+}
+ bool AddToTree( int value )
+ {
+  return ( AddToTree( value, &m_pHeader ) ) ;
+ }
+
+ bool SearchTree( int value )
+ {
+  return SearchBinaryTree( value, m_pHeader );
+ }
+
+protected:
+void printNode( Node* pRootNode )
+{
+	if ( pRootNode ){
+		printf( "%d\n", pRootNode->value );
+		if (pRootNode->left){
+		    printf( "<-" );
+		    printNode( pRootNode->left );
+		}
+		if ( pRootNode->right ){
+		    printf( "->" );
+		    printNode( pRootNode->right );
+		}
+	}
+}
+
+  void DeleteNode ( Node* pCurrentNode )
+  {
+	if (pCurrentNode){
+		if ( pCurrentNode->GetLeftNode() )
+			DeleteNode( pCurrentNode->GetLeftNode() );
+		if ( pCurrentNode->GetRightNode() )
+			DeleteNode( pCurrentNode->GetRightNode() );
+		if (pCurrentNode){
+			delete pCurrentNode;
+			pCurrentNode = NULL;
+		}
+	}
+  }
+  Node* AddToTree( int value,  Node** pCurrentNode )
+ {
+  if(*pCurrentNode == NULL)
+  {
+   *pCurrentNode = new Node( value, NULL, NULL);
+      return *pCurrentNode;
+  }
+
+  if ( value >= (*pCurrentNode)->GetValue() )
+  {
+
+   return AddToTree ( value, &( (*pCurrentNode)->right ) );
+  }
+  else
+  {
+   return AddToTree ( value, &((*pCurrentNode)->left));
+  }
+
+  return NULL;
+ }
+
+ bool SearchBinaryTree( int value, Node* pCurrentNode )
+ {
+  if(pCurrentNode == NULL)
+  {
+   return false;
+  }
+
+  if ( value == pCurrentNode->GetValue() )
+  {
+   return true;
+  }
+  else if ( value > pCurrentNode->GetValue() )
+  {
+   return SearchBinaryTree( value, pCurrentNode->GetRightNode() );
+  }
+  else 
+  {
+   return SearchBinaryTree( value, pCurrentNode->GetLeftNode() );
+  }
+
+  return false;
+ }
+
+ 
+};
+
+class AVLTree : public BinarySearchTree{
+	public:
+	AVLTree():BinarySearchTree(){}
+	~AVLTree(){}
+
+ bool AddToTree( int value )
+     {
+        Node* pNewNode = BinarySearchTree::AddToTree( value, &m_pHeader );
+        if ( pNewNode ){
+            int balance = getBalance( m_pHeader );
+        
+            // Left Left Case
+            if ( balance > 1 && value < m_pHeader->GetLeftNode()->value ) 
+            {
+                printf("%d\n", 1);
+                m_pHeader = RotateRight( m_pHeader );
+		        return true;
+            }
+            
+            // right right Case
+            if ( balance < -1 && value > m_pHeader->GetRightNode()->value ) 
+            {
+                printf("%d\n", 2);
+                m_pHeader = RotateLeft( m_pHeader );
+		        return true;		
+            }
+            
+	    // left right case
+            if ( balance > 1 && value > m_pHeader->GetLeftNode()->value ) 
+            {
+                m_pHeader->left = RotateLeft( m_pHeader );
+	        	m_pHeader = RotateRight( m_pHeader );
+		        return true;
+            }
+		
+            // right left Case
+            if ( balance < -1 && value < m_pHeader->GetRightNode()->value ) 
+            {
+                m_pHeader->right = RotateRight( m_pHeader );
+		        m_pHeader = RotateLeft( m_pHeader );
+	        	return true;
+            }
+        }
+        return false;
+     }
+    
+    bool IsBalanced()
+    {
+        return ( abs( getBalance( m_pHeader ) ) <= 1 );    
+    }
+	protected:
+	Node* RotateLeft( Node* pCurrentNode)
+	{
+		printf("InRotateLeft For %d\n", pCurrentNode->value );
+		Node* pRightNode = pCurrentNode->GetRightNode();
+		Node* pRightLeftNode = pRightNode->GetLeftNode();
+
+		pRightNode->left = pCurrentNode;
+		pCurrentNode->right = pRightLeftNode;
+		
+		return pRightNode;
+	}
+	
+	Node* RotateRight( Node* pCurrentNode)
+	{
+		printf("InRotateRight For %d\n", pCurrentNode->value );		
+		Node* pLeftNode = pCurrentNode->GetLeftNode();
+		Node* pLeftRightNode = pLeftNode->GetRightNode();
+
+		pLeftNode->right = pCurrentNode;
+		pCurrentNode->left = pLeftRightNode;
+
+		return pLeftNode;
+	}
+	
+	int GetHeight( Node* pCurrentNode )
+	{
+	    if ( !pCurrentNode )
+	        return 0;
+	    int nLeftHeight = GetHeight( pCurrentNode->GetLeftNode() );
+	    int nRightHeight = GetHeight( pCurrentNode->GetRightNode() );
+	    printf("InGetHeight For Node: %d, left child height %d, right child height %d\n", pCurrentNode->value, nLeftHeight, nRightHeight );
+	    return 1 + max( nLeftHeight, nRightHeight );   
+	}
+	// Get Balance factor of node N
+    int getBalance( Node *pCurrentNode )
+    {
+        if (pCurrentNode == NULL)
+            return 0;
+	    int nBalance = GetHeight(pCurrentNode->left) - GetHeight(pCurrentNode->right);
+	    printf("getBalance For Node: %d, balance is %d\n", pCurrentNode->value, nBalance );
+        return nBalance;
+    }
+};  
+
+int main()
+{
+    int value;
+	printf("Creating Binary Search Tree\n");
+	BinarySearchTree tree1;
+	tree1.AddToTree( 10 );
+	tree1.AddToTree( 5 );
+	tree1.AddToTree( 9 );
+	tree1.AddToTree( 12 );
+	tree1.AddToTree( 11 );
+	
+	tree1.printNodes( );
+	
+	value = 100;
+	
+	printf("%d %s in binary search tree\n", value, (tree1.SearchTree( value )?"Found":"Not Found"));
+	
+	value = 9;
+	printf("%d %s in binary search tree\n", value, (tree1.SearchTree( value )?"Found":"Not Found"));
+
+	printf("Creating AVL Search Tree\n");
+	AVLTree tree2;
+	tree2.AddToTree( 10 );
+	tree2.AddToTree( 5 );
+	tree2.AddToTree( 12 );
+	tree2.AddToTree( 9 );
+	tree2.AddToTree( 8 );
+	tree2.AddToTree( 14 );
+	tree2.AddToTree( 15 );
+	tree2.AddToTree( 1 );
+	tree2.AddToTree( 16 );
+	tree2.AddToTree( 18 );
+	tree2.AddToTree( 3 );
+	tree2.AddToTree( 2 );
+	
+	tree2.printNodes( );
+	
+	value = 100;
+	
+	printf("%d %s in AVL search tree\n", value, (tree2.SearchTree( value )?"Found":"Not Found"));
+	
+	value = 16;
+	printf("%d %s in AVL search tree\n", value, (tree2.SearchTree( value )?"Found":"Not Found"));
+	char output[][30] = { "Tree is Not Balanced", "Tree is Balanced"}; 
+	printf("%s\n", output[ tree2.IsBalanced() ] );
+}                                                                                                                                                                                                                                                                                                                            

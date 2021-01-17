@@ -1,0 +1,98 @@
+/**
+Author: Shivaji Basu
+Dated: 10.11.2014
+*/
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
+
+#define ARRAY_SIZE(a) sizeof(a)/sizeof( a[0] )
+
+#define ALPHABET_SIZE 64 //26 - alph, 9 - numbers, 37 - specialchares
+
+#define CHAR_TO_INDEX(c) ((int)c- (int)'a')
+
+struct TrieNode{
+	struct TrieNode* children[ALPHABET_SIZE];
+
+	bool bLeafNode;
+};
+
+struct TrieNode* GetNode()
+{
+	struct TrieNode* pNode = NULL;
+
+	pNode = (struct TrieNode*)malloc(sizeof(struct TrieNode));
+
+	if (pNode) {
+		for (int i=0; i<ALPHABET_SIZE; i++)
+		{
+			pNode->children[ i ] = NULL;
+		}
+		pNode->bLeafNode = false;
+	}
+
+	return pNode;
+}
+
+
+void InsertNode( struct TrieNode* root, char* key )
+{
+	int length = strlen( key );
+	int index = 0;
+
+	struct TrieNode *pCrawl = root;
+
+	for (int l=0; l<length; l++)
+	{
+		index = CHAR_TO_INDEX( key[l] );
+		pCrawl->children[ index ] = GetNode();
+		
+		pCrawl = pCrawl->children[ index ];
+	}
+
+	pCrawl->bLeafNode = true;	
+}
+
+
+bool SearchNode( struct TrieNode* root, char* key )
+{
+	int index = 0;
+	int length = strlen( key );
+		
+	struct TrieNode* pCrawl = root;
+
+	for (int l=0; l<length; l++)
+	{
+		index = CHAR_TO_INDEX( key[l] );
+		
+		if ( pCrawl->children[ index ] )
+		{
+			pCrawl = pCrawl->children[ index ];
+		}else{
+			return false;
+		}				
+	}
+	return ( pCrawl && pCrawl->bLeafNode );
+}
+
+int main()
+{
+	char keys[][10] = { "my", "name", "is", "shivaji", "basu", "I", "live", "in", "Siv", "Hills" }; 
+	char output[][40] = { "Not Found In Trie", "Found In Trie" };
+
+	struct TrieNode *root= GetNode();
+
+	for (int l = 0; l<(int)ARRAY_SIZE( keys ); l++)
+		InsertNode( root, keys[ l ] ); 		
+
+
+	printf("%s ..... %s\n", "name", output[ SearchNode( root, "name" ) ]);
+	printf("%s ..... %s\n", "shiva", output[ SearchNode( root, "shiva" ) ]);
+	printf("%s ..... %s\n", "Siv", output[ SearchNode( root, "Siv" ) ]);
+	printf("%s ..... %s\n", "basu", output[ SearchNode( root, "basu" ) ]);
+
+	return 0;
+}
+
